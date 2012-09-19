@@ -38,6 +38,19 @@ Less terrible dynamic SQL
    maintaining many similar queries.
 +* They all have short-comings...
 
+----
+== Why automate?
+
+If the automation options suck so much, why automate?
++
+* Reduce duplication of SQL code
+  * Lots of nearly identical groups of queries
++
+* Cross database support
+  * Different databases extend SQL, each in their own way.
+  * Each query may need to be duplicated for each
+    supported database.
+
 ----replace
 == SQL Automation
 == What has been tried?
@@ -110,23 +123,25 @@ ORM is the Vietnam of computer science.
     starts well, gets more complicated as time passes, and before long
     entraps its users in a commitment that has no clear demarcation
     point, no clear win conditions, and no clear exit strategy.
-  
+
+        --Ted Neward
+
 http://blogs.tedneward.com/2006/06/26/The+Vietnam+Of+Computer+Science.aspx
 
 ----perl
 
     use SQL::Abstract;
- 
+
     my $sql = SQL::Abstract->new;
- 
+
     my %where = (
         requestor => 'inna',
         worker    => ['nwier', 'rcwe', 'sfz'],
         status    => { '!=', 'completed' }
     );
- 
+
     my($stmt, @bind) = $sql->select('tickets', '*', \%where);
- 
+
 ----
 == Programmatic query builders
 
@@ -140,6 +155,7 @@ http://blogs.tedneward.com/2006/06/26/The+Vietnam+Of+Computer+Science.aspx
 
 ----perl
 # Mason Templates (Really!)
+
 <%method COUNT>
 <%args>
     $wh => ''
@@ -198,7 +214,6 @@ sub contacts_between_dates {
 == What have we learned from all this?
 
 +* Managing SQL is HARD
-+* SQL dialects impose a heavy tax on tool makers.
 +* Every attempt to hide SQL forces compromises.
   * Limited/strange schemas
   * Cannot apply to existing database
@@ -226,26 +241,105 @@ sub contacts_between_dates {
 ----
 
 == So, what's the plan?
+
 +* Keep it simple, stupid.
+
 +* Keep related things together.
+
 +* Don't hide your SQL.  Flaunt it.
 
 
 ----
-== Add a few familiar symbols
+== Add a few familiar symbols to your SQL...
 
   *  means ALWAYS
   &  means ALL
   |  means ANY
-  #  means COMMENT
+  \#  means COMMENT
 
   ?? is a PLACEHOLDER
   !! is a DEPENDENCY
   ~ NEGATES a dependency
-  = fancy placeholder EQAULITY
-  ! fancy placeholder INEQAULITY
+  = fancy placeholder EQUALITY
+  ! fancy placeholder INEQUALITY
   " placeholder LITERAL INTERPOLATION
   @ placeholder for ARRAY types
+
+----replace
+== ...and go crazy!
++
+No.
++
+== Instead...
+
+----
+== Learn a few simple concepts
+
+* DBIx::PreQL works on templates line by line.
+
+* Each line consists of a tag and some SQL.
+
+* The template processor is controlled by passing in data.
+
+----replace
+== Tags
+
+Tags are the first clump of non-whitespace
+
++
+== Tags
+
+They can be symbols: * & |
+
+ * SELECT
+ *   prisoner_id ,
+ * WHERE
+ *   prisoner_id = ?prisoner_id?
+
++
+== Tags
+
+They can be words:
+
+MYSQL   AND foo = some_bizarre_func(?foo?)
+PGSQL   AND foo = pg_equivalent_func(?foo?)
+ORACLE  AND foo = valent_func(?foo?) * 255
+
++
+== Tags belong at the front of each line
+
+Every line must have one and only one tag.
+
+----
+== Placeholders
+
+Any user of Perl's DBI library will have run across ?
+placeholders in query code..
+
+DBIx::PreQL doubles up ?? and has you name the
+to have named parameters
+
+These live in the body of the SQL:
+
+   &    AND foo = ?barnation?
+
+----
+== Dependency Markers
+
+Like placeholders, dependency markers live in the body of the SQL
+
+Unlike placeholders, depency markers disappear after processing.
+
+   *    AND foo = ?barnation?  !foo!
+
+Becomes:
+
+   AND foo = ?
+
+given the right data set.
+
+----
+== Let's get started!!!
 
 ----perl
 #  Write some SQL:
@@ -433,7 +527,7 @@ Handle complex equivalence:
 
 Given data{order} = 'BOB12345'
    SQL becomes:
-      AND order_id = ?  
+      AND order_id = ?
    with 'BOB12345' in the params array.
 
 Given data{order} = \'NULL'
@@ -451,7 +545,7 @@ Handle complex not-equal writing:
 
 Given data{order} = 'BOB12345'
    SQL becomes:
-      AND order_id <> ?  
+      AND order_id <> ?
    with 'BOB12345' in the params array.
 
 Given data{order} = \'NULL'
@@ -481,14 +575,14 @@ Do direct interpolation of placeholder content.
 
  &  AND order_id = ?"order?
 
-Given data{order} = "'BOB12345'";
+Given data{order} = 'random()';
    SQL becomes:
-      AND order_id =  'BOB12345'
+      AND order_id = random()
    with nothing in the params array.
 
-Given data{order} = \"'BOB12345'";
+Given data{order} = \'random()'";
    SQL becomes:
-      AND order_id =  'BOB12345'
+      AND order_id = random()
    with nothing in the params array.
 
 ----

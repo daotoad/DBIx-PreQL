@@ -1,0 +1,28 @@
+To Do Items
+----------------
+
+New syntax:
+ 
+  Add a way to produce 'foo IN ( ?, ?, ? )'
+  - make ?? take an array ref
+  - make ?=? take an array ref and supply an 'IN'
+
+Improved testing:
+
+  Replace 00-core.t with refactored, focussed interface tests.
+  - 01-simple-tags is ~90% done.
+  - 02-want-list is 0% done
+  - 03-want-subs is 0% done
+  - 04-known-tags
+  - 05-keep-keys
+  - 06-named-placeholders
+  - 07-dependencies
+  - ??
+
+Better docs:
+
+  Slideshow
+  - need more examples in the advanced features section
+    - escpecially in custom tags.
+  - Add HTML generation to 'make dist'
+
