@@ -5,7 +5,7 @@
 #
 ---- config
 # Basic config options.
-title: Vroom!
+title: DBIx::PreQL - Less terrible dynamic SQL.
 indent: 5
 height: 18
 width: 69
@@ -14,6 +14,7 @@ skip: 0
 
 vimrc:
   set listchars=
+  nonu
 
 # The following options are for Gvim usage.
 # vim: gvim
