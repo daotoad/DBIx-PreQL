@@ -10,6 +10,9 @@ use constant TAG_IF_ALL_EXIST   => '&';
 use constant TAG_IF_ANY_EXIST   => '|';
 use constant TAG_IF_PREFIXED    => qr/^([&|])(?![&|])(\S*)$/;
 
+use constant DO_SUBSTITUTION   => 1;
+use constant SKIP_SUBSTITUTION => 0;
+
 # Substitution types:
 #   !ifset!,        !~ifnotset!
 #   ?param?,        ?@array_ref?
@@ -53,8 +56,9 @@ sub _split_query {
 
     my @lines = grep /\S/,  # Remove blank lines
         map {
-            # Split into lines, removing trailing whitespace:
-            split /[^\S\n]*\n/, $_
+            # Split strings into lines, removing trailing whitespace:
+            # Leave refs alone
+            ref $_ ? $_ : split /[^\S\n]*\n/, $_
         } ref $q eq 'ARRAY' ?  @$q : ($q);
     my $indent;
     for(  @lines  ) {
@@ -144,6 +148,8 @@ sub _find_dependencies {
 sub _select_line {
     my( $line, $base_indent, $data, $want, $known_tags ) = @_;
 
+    return _select_ref(@_) if ref $line;
+
     my( $prefix, $tag, $indent, $sql, $context ) = _parse_line( $line, $base_indent );
 
     return
@@ -219,7 +225,22 @@ sub _select_line {
     croak "Missing named place-holders (@{$nph->{missing}})$context"
         if  @{$nph->{missing}};
 
-    return( $indent . $sql, $context );
+    return( $indent . $sql, $context, DO_SUBSTITUTION );
+}
+
+sub _select_ref {
+    my( $line, $base_indent, $data, $want, $known_tags ) = @_;
+
+    my $ref = ref $line;
+    croak "Illegal ref type '$ref'" if $ref ne 'ARRAY';
+
+    my ($sql, @params) = @$line;
+
+    my ( $first_line ) = $sql =~ /^(\s*)(.+)/m;
+
+    my $context = ":\n    [ '$first_line'... ]\n"; # Used for error messages.
+
+    return $sql, $context, SKIP_SUBSTITUTION, @params;
 }
 
 
@@ -321,13 +342,17 @@ sub build_query {
     my @binds;      # Build list in loop
 
     for ( @query_lines ) {
+
         # Determine if we should include this line:
-        my( $line, $context ) = _select_line(
+        my( $line, $context, $do_subs, @params ) = _select_line(
             $_, $indent, $data, $want, $known_tags,
         )
             or  next;
 
-        ( $line, my @params ) = _substitute_line( $line, $context, $data );
+        if( $do_subs ) {
+            ( $line, my @subs_params ) = _substitute_line( $line, $context, $data );
+            push (@params, @subs_params);
+        }
 
         # Remove trailing comma if in front of 'FROM':
         $query[-1] =~ s/,\s*$//
@@ -400,13 +425,19 @@ DBIx::PreQL - beat dynamic SQL into submission
     use DBIx::PreQL   ();
 
 
-    my $q = <<END_SQL;
+    my $q1 = <<END_SQL;
         *   SELECT
         &       count(*),                   !total!
         *       name,
     END_SQL
 
+    # is the same as:
 
+    my $q2 = [
+       ' *   SELECT',
+       ' &       count(*),',                   !total!
+       ' *       name,',
+    ];
 
 
     my $q = <<END_SQL;
@@ -595,6 +626,46 @@ blank line in the generated SQL because we want to catch cases like:
 
 You can use C<"* --"> to include a nearly-blank (SQL comment) line in the
 generated SQL.
+
+=head3 SQL-fragment insertion
+
+It is possible to include a string of raw SQL and a group of parameters in the midst of a template.
+
+To do this insertion, put the SQL and the parameter list in an array reference.
+
+Advanced features such as trailing comma and leading 'AND' removal will work as usual, treating the sql string provided as one line.
+
+    my $template = [
+       ' * SELECT',
+       [ 'subquery element,'], 
+       ' * FROM table WHERE ',
+       [ ' AND foo=? AND bar=?', 'foo', 'bar' ],
+
+    ];
+
+    # When processed, becomes:
+
+    SELECT
+    subquery element
+    FROM table WHERE
+        foo=? AND bar=?
+
+    # with params
+    # @params = ('foo', 'bar');
+
+    # This will insert the first array into the select list
+    # and the second array into the WHERE clause
+    # The 
+    
+This feature is particulary useful when you have small blocks of reusable, dynamic SQL that need to their own complex generation logic.  Wrap each bit in a subroutine, and pass the results into an existing template like this:
+
+    my $template = [
+       ' * SELECT',
+       ' *   subquery element,', 
+       ' * FROM table WHERE ',
+       [ permissions_where_clause( foo=> adsafds, bar=> asdfadsf ) ],
+       ' *   AND monkey=?cheese?',
+   ];
 
 =head3 Advanced template features
 
