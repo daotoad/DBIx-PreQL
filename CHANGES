@@ -1,8 +1,22 @@
-v0.01.00 - 2012-09-18
------------------------------
-* Initial public offering
-* New tests
-* New doc
-* Work specific junk removed.
+Revision history for perl module DBIx::PreQL
+
+v0.02.00   2013-10-16
+
+ [Documentation updates]
+  - Added TODO list.
+  - Changes now follows CPAN standard.
+  - Slideshow improved based on feedback.
+
+ [New Feature]
+ - SQL-fragment insertion.
+   Pass in an array ref containing SQL and a list of placeholder parameters,
+   the SQL will be included and the parameters inserted into the parameter list.
+
+v0.01.00   2012-09-18
+
+ [Initial public offering]
+  - New tests
+  - New doc
+  - Work specific junk removed.
 
 

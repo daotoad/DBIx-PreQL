@@ -6,12 +6,14 @@ New syntax:
   Add a way to produce 'foo IN ( ?, ?, ? )'
   - make ?? take an array ref
   - make ?=? take an array ref and supply an 'IN'
+  - make ?(foo)? produce (?,?,?) and ?[foo]? produce [?,?,?] 
 
 Improved testing:
 
   Replace 00-core.t with refactored, focussed interface tests.
-  - 01-simple-tags is ~90% done.
+  - 01-simple-tags is done.
   - 02-want-list is 0% done
+  - 03-sql-fragment-insertion is done
   - 03-want-subs is 0% done
   - 04-known-tags
   - 05-keep-keys
@@ -21,8 +23,16 @@ Improved testing:
 
 Better docs:
 
+  Github
+  - Add links to cpan
+  - Upload html slideshow to github pages
+
+  POD
+  - Add links to github
+
   Slideshow
   - need more examples in the advanced features section
     - escpecially in custom tags.
   - Add HTML generation to 'make dist'
+  - Add links to github and cpan
 

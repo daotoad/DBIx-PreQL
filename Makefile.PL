@@ -21,7 +21,7 @@ my %WriteMakefileArgs = (
         'B' => '0',
         'Carp' => '0',
     },
-    'VERSION' => '0.01.00',
+    'VERSION' => '0.02.00',
     'test' => {
         'TESTS' => 't/*.t'
     }

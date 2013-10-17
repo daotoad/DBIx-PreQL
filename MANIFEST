@@ -7,3 +7,4 @@ README.md
 t/00-core.t
 t/01-simple_tags.t
 t/02-simple_wanted_list.t
+t/03-sql-fragment-insertion.t

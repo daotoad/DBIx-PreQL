@@ -1,4 +1,5 @@
 package DBIx::PreQL;
+our $VERSION = '0.02.00';
 use strict;
 use warnings;
 use Carp qw< croak carp >;
