@@ -182,28 +182,26 @@ sub _select_line {
             if  @{$deps->{all}};
     }
 
-    {
-        if( TAG_ALWAYS ne $tag ) {  # Handle custom tags:
-            if(  $known_tags  ) {
-                croak "Unknown tag found$context"
-                    if  ! $known_tags->{$tag}++;
-            } else {
-                croak "Missing tag?$context"
-                    if  $tag =~ /,$/
-                    ||  grep( $_ eq uc $tag, qw<
-                            SELECT FROM LEFT RIGHT INNER OUTER JOIN USING ON
-                            WHERE AND OR
-                            ORDER GROUP BY LIMIT OFFSET HAVING
-                            UNION ALL DISTINCT
-                            INSERT UPDATE ALTER CREATE DROP
-                            WITH OVER BETWEEN
-                        > );
-            }
-            croak "No wanted list/function provided when using custom tag$context"
-                if  ! $want;
-            return
-                if  ! $want->( $tag, $data );
+    if( TAG_ALWAYS ne $tag ) {  # Handle custom tags:
+        if(  $known_tags  ) {
+            croak "Unknown tag found$context"
+                if  ! $known_tags->{$tag}++;
+        } else {
+            croak "Missing tag?$context"
+                if  $tag =~ /,$/
+                ||  grep( $_ eq uc $tag, qw<
+                        SELECT FROM LEFT RIGHT INNER OUTER JOIN USING ON
+                        WHERE AND OR
+                        ORDER GROUP BY LIMIT OFFSET HAVING
+                        UNION ALL DISTINCT
+                        INSERT UPDATE ALTER CREATE DROP
+                        WITH OVER BETWEEN
+                    > );
         }
+        croak "No wanted list/function provided when using custom tag$context"
+            if  ! $want;
+        return
+            if  ! $want->( $tag, $data );
     }
 
     croak "Missing named place-holders (@{$nph->{missing}})$context"
