@@ -177,10 +177,12 @@ sub _select_line {
             if  ! @{$deps->{all}};
         return
             if  ! @{$deps->{found}};
-    } else {
+    } elsif( TAG_ALWAYS eq $tag ) {
         croak "Dependency markers (@{$deps->{all}}) used with wrong tag type$context"
             if  @{$deps->{all}};
+    }
 
+    {
         if( TAG_ALWAYS ne $tag ) {  # Handle custom tags:
             if(  $known_tags  ) {
                 croak "Unknown tag found$context"
