@@ -166,25 +166,6 @@ sub _select_line {
     croak "Missing tag?$context"    # Catch "* SELECT\n  *\n* FROM\n"
         if  $sql !~ /\S/;           #                  ^ missing tag
 
-#TAG_IF_ALL_EXIST,     {
-#    die_msg     => "No parameters nor dependency markers specified",
-#    die_unless  => [ $nph->{all}, $deps->{all} ],
-#    skip_if     => [ $deps->{missing} ],
-#},
-#
-#TAG_IF_ANY_EXIST, {
-#    die_msg => "No dependency markers specified",
-#    die_unless  => [ $deps->{all} ],
-#    skip_unless => [ $deps->{found} ],
-#},
-#TAG_ALWAYS, {
-#    die_msg => "Dependency markers ({$deps->{all}}) used with wrong tag type"
-#    die_if  => [ $deps->{all} ],
-#}
-
-
-
-
     if( TAG_IF_ALL_EXIST eq $prefix ) {
         croak "No parameters nor dependency markers specified$context"
             if  ! @{$nph->{all}}
