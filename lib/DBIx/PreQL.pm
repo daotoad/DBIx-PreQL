@@ -199,7 +199,7 @@ sub _select_line {
                             WITH OVER BETWEEN
                         > );
             }
-            croak "No wanted function provided when using custom tag$context"
+            croak "No wanted list/function provided when using custom tag$context"
                 if  ! $want;
             return
                 if  ! $want->( $tag, $data );
