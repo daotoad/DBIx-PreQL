@@ -1,5 +1,20 @@
 Revision history for perl module DBIx::PreQL
 
+v0.02.01   2013-10-25
+
+ [Documentation updates]
+ - Changed spelling of namedplaceholder everywhere.
+
+ [Testing]
+ - New test library added.
+ - New tests added.
+
+ [Bugs Fixed]
+ - Named placeholders were being accepted by | tagged lines.
+   Template now croaks in this condition
+ - Improved error messages
+ - Fixed incorrect handling of &TAG lines.
+
 v0.02.00   2013-10-16
 
  [Documentation updates]
