@@ -167,12 +167,14 @@ sub _select_line {
         if  $sql !~ /\S/;           #                  ^ missing tag
 
     if( TAG_IF_ALL_EXIST eq $prefix ) {
-        croak "No parameters nor dependency markers specified$context"
+        croak "No named placeholders or dependency markers specified$context"
             if  ! @{$nph->{all}}
             &&  ! @{$deps->{all}};
         return
             if  @{$deps->{missing}};
     } elsif( TAG_IF_ANY_EXIST eq $prefix ) {
+        croak "Named placeholders used with wrong tag type$context"
+            if @{$nph->{all}};
         croak "No dependency markers specified$context"
             if  ! @{$deps->{all}};
         return
