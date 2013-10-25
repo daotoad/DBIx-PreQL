@@ -204,7 +204,7 @@ sub _select_line {
             if  ! $want->( $tag, $data );
     }
 
-    croak "Missing named place-holders (@{$nph->{missing}})$context"
+    croak "Missing named placeholders (@{$nph->{missing}})$context"
         if  @{$nph->{missing}};
 
     return( $indent . $sql, $context, DO_SUBSTITUTION );
@@ -477,23 +477,23 @@ or more non-whitespace characters, a separator of one or more whitespace
 characters, and the remainder of the line is the embedded SQL (the B<body>).
 
 Each line B<body> consists of plain SQL text and perhaps some
-B<named place-holders> and/or B<dependency markers>.
+B<named placeholders> and/or B<dependency markers>.
 
 =head3 Body Text
 
 =over 4
 
-=item Named place-holders
+=item Named placeholders
 
-A B<named place-holder> is a name bracketed by question marks, like
-C<?key_name?>.  Use named place-holders where you would normally use
-place-holders (C<?>) in SQL (with DBI).
+A B<named placeholder> is a name bracketed by question marks, like
+C<?key_name?>.  Use named placeholders where you would normally use
+placeholders (C<?>) in SQL (with DBI).
 
-When a named place-holder is included in a query, it gets replaced by just
-a question mark (C<?>, a regular DBI place-holder) and the named value gets
+When a named placeholder is included in a query, it gets replaced by just
+a question mark (C<?>, a regular DBI placeholder) and the named value gets
 pushed onto the list of query parameters.
 
-There are also special forms of place-holders (C<?=key_name?>, C<?!key_name?>,
+There are also special forms of placeholders (C<?=key_name?>, C<?!key_name?>,
 C<?@key_name?>, and C<?"key_name?>) which we will describe later.
 
 =item Dependency markers
@@ -541,12 +541,12 @@ just comments.
 =item C<&>
 
 A tag of C<&> (ampersand) means I<include this line if we have data for
-ALL named place-holders and ALL dependency markers>.  These lines are
+ALL named placeholders and ALL dependency markers>.  These lines are
 the work-horse lines that will handle most of the dynamic query assembly.
 
 You can also use a custom tag that I<starts> with an ampersand (C<&>), like
 C<'&TOT'>.  For such tags, first we check that we have data for all named
-place-holders and all dependency markers.  If not, then the line is simply
+placeholders and all dependency markers.  If not, then the line is simply
 excluded.  Otherwise, the C<&> is stripped and the remainder of the tag
 is treated as a custom tag and will be checked against your 'wanted' list /
 function.
@@ -564,12 +564,12 @@ only gets included if
 =item C<|>
 
 A tag of C<|> (vertical bar) means I<include this line if we have data for
-ANY dependency markers as well as for ALL named place-holders>.  These
+ANY dependency markers as well as for ALL named placeholders>.  These
 lines will be less common.
 
 Similar to C<&>, you can use a custom tag that I<starts> with a vertical
 bar (C<|>), like C<'|SUM'>.  For such tags, first we check that we have data
-for ANY dependency markers and for ALL named place-holders.  If not, then the
+for ANY dependency markers and for ALL named placeholders.  If not, then the
 line is simply excluded.  Otherwise, the C<|> is stripped and the remainder
 of the tag is treated as a custom tag and will be checked against your
 'wanted' list / function.
@@ -580,8 +580,8 @@ two dependency markers, say C<!tot!> and C<!~sum!>, only gets included if
     defined $data->{tot}  ||  ! defined $data->{sum}
 
 and the C<|> tag was chosen to match the C<||> operator in that expression.
-(Named place-holders are treated the same as for the C<&> tag since having
-an undefined or missing value for a place-holder would just be fatal.)
+(Named placeholders are treated the same as for the C<&> tag since having
+an undefined or missing value for a placeholder would just be fatal.)
 
 =back
 
@@ -700,8 +700,8 @@ by instead writing:
 
 =item C<?=key_name?>
 
-A special form of named place-holder includes an equals sign (C<=>) before
-the key name.  This place-holder does special handling for C<NULL> values.
+A special form of named placeholder includes an equals sign (C<=>) before
+the key name.  This placeholder does special handling for C<NULL> values.
 To specify a C<NULL> value, use C<\'NULL'> as the associated value (a SCALAR
 reference to the string C<'NULL'>).
 
@@ -717,20 +717,20 @@ or
 
     AND affil_parent IS NULL
 
-The second case (where the place-holder is replaced by C<'IS NULL'>) happens
+The second case (where the placeholder is replaced by C<'IS NULL'>) happens
 if C<$data->{parent}> is C<\'NULL'> (ignoring case and external whitespace).
 For this case, the list of query parameters is not added to.
 
-The first case (where the place-holder is replaced by C<'= ?'>) happens
+The first case (where the placeholder is replaced by C<'= ?'>) happens
 if C<$data->{parent}> is not a reference (but is defined).  For this case,
 C<$data->{parent}> (or just 'parent') is pushed onto the list of query
 parameters.
 
 =item C<?!key_name?>
 
-A similar special form of named place-holder includes an exclamation point
-(C<!>) before the key name.  This place-holder similarly supports C<\'NULL'>
-as the associated value.  But this place-holder represents "distinct from"
+A similar special form of named placeholder includes an exclamation point
+(C<!>) before the key name.  This placeholder similarly supports C<\'NULL'>
+as the associated value.  But this placeholder represents "distinct from"
 (the opposite meaning compared to C<?=key_name?>).  Note that actually using
 "is distinct from" or "is not distinct from" in your template is discouraged
 for these cases as the Postgres query optimizer can be hampered by such.
@@ -747,18 +747,18 @@ or
 
     AND affil_parent IS NOT NULL
 
-The second case (where the place-holder is replaced by C<'IS NOT NULL'>)
+The second case (where the placeholder is replaced by C<'IS NOT NULL'>)
 happens if C<$data->{parent}> is C<\'NULL'> (ignoring case and external
 whitespace).  For this case, the list of query parameters is not added to.
 
-The first case (where the place-holder is replaced by C<< '<> ?' >>)
+The first case (where the placeholder is replaced by C<< '<> ?' >>)
 happens if C<$data->{parent}> is not a reference (but is defined).  For
 this case, C<$data->{parent}> (or just 'parent') is pushed onto the list
 of query parameters.
 
 =item C<?@key_name?>
 
-A place-holder with an at sign (like C<?@key_name?>) requires that the
+A placeholder with an at sign (like C<?@key_name?>) requires that the
 associated value be an ARRAY reference but otherwise behaves identically
 to a plain, named placed-holder.  DBD::Pg will treat the array reference
 as a Postgres array value.
@@ -785,7 +785,7 @@ The SQL we want to generate to use a Postgres array value instead would be:
 
 C<ARRAY[account_id]> makes a Postgres array value containing a single value
 (the value of account_id).  C<< <@ >> means "is contained in".  And the C<?>
-is a plain DBI place-holder.
+is a plain DBI placeholder.
 
 So the new code would look something like:
 
@@ -806,7 +806,7 @@ Note how I had to put a backslash (C<\>) in front of the at sign in
 C<?\@sub_accts?> because my SQL template string was enclosed in double
 quotes.  If I hadn't done that, the query would not have worked.  Luckily,
 build_query() would almost certainly have complained because that line had
-a C<'&'> tag but no named place-holders.
+a C<'&'> tag but no named placeholders.
 
 Note that a reference to an I<empty> array would mean that
 
@@ -830,7 +830,7 @@ follows:
 =item C<?"key_name?>
 
 For the rare, complicated case, you can put a double quote before the key
-name in a named place-holder.  This place-holder will be replaced by the
+name in a named placeholder.  This placeholder will be replaced by the
 string value associated with that key name in the data hash.  So the string
 value should be a snippet of valid SQL.
 
@@ -865,10 +865,10 @@ causes the templating system to act the same as if the key were not present.
 
 =item C<\$sql>
 
-If the associated value for a named place-holder is a reference to a scalar,
+If the associated value for a named placeholder is a reference to a scalar,
 then the referenced scalar is expected to contain a valid snippet of literal
 SQL (similar to how AT::SQL and other helpers treat such SCALAR refs).  The
-named place-holder will be replaced with the literal SQL (not with C<'?'>)
+named placeholder will be replaced with the literal SQL (not with C<'?'>)
 and the list of query parameters will not be added to.
 
 For C<?=key_name?>, C<'= '> will also be inserted just prior to the literal
@@ -886,7 +886,7 @@ matter.
 
 A reference to a string of C<'NULL'> (ignoring case and external whitespace)
 is treated differently from a reference to some other snippet of SQL only for
-the C<?=key_name?> and C<?!key_name?> place-holders (as documented elsewhere).
+the C<?=key_name?> and C<?!key_name?> placeholders (as documented elsewhere).
 
 =item C<\@list>
 
@@ -896,9 +896,9 @@ as a data value.  However, it is quite hard to imagine a spot in an SQL
 template where a Postgres array and a non-array value would both be
 equally valid.
 
-So we require you to declare whether or not you expect the place-holder to
+So we require you to declare whether or not you expect the placeholder to
 take an ARRAY reference.  C<?@key_name?> requires an array reference.  Other
-place-holders treat an array reference as a fatal error.
+placeholders treat an array reference as a fatal error.
 
 =item Stringifier
 
@@ -910,11 +910,11 @@ be stringified.
 In such a case, the blessed object being a reference to a SCALAR or to an
 ARRAY will be ignored.  So, for example, a blessed reference to an ARRAY
 that overloads stringification is a fatal error for a C<?@key_name?>
-place-holder.
+placeholder.
 
 =item Other references
 
-Other types of references are treated as fatal errors by named place-holders.
+Other types of references are treated as fatal errors by named placeholders.
 Dependency markers currently treat any kind of reference the same as a
 non-reference.  But these behaviors should not be relied upon.
 
@@ -1084,7 +1084,7 @@ a fatal error.  Having a tag in this list that is never found is a warning.
 
 Optional.  A boolean value.  Unlikely to be used.
 
-When true, place-holder names (the I<keys> to the C<'data'> hash-ref) are
+When true, placeholder names (the I<keys> to the C<'data'> hash-ref) are
 what get pushed onto the query parameter list.  When false (the default),
 what gets pushed onto the query parameter list are the I<values> from the
 C<'data'> hash-ref.
