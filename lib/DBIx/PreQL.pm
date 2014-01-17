@@ -1,5 +1,5 @@
 package DBIx::PreQL;
-our $VERSION = '0.02.01';
+our $VERSION = '0.02.02';
 use strict;
 use warnings;
 use Carp qw< croak carp >;
@@ -147,7 +147,7 @@ sub _find_dependencies {
 }
 
 sub _select_line {
-    my( $line, $base_indent, $data, $want, $known_tags ) = @_;
+    my( $line, $base_indent, $data, $want, $known_tags, $keep_keys ) = @_;
 
     return _select_ref(@_) if ref $line;
 
@@ -161,7 +161,7 @@ sub _select_line {
 
     return
         if  @{$nph->{missing}}
-        &&  $prefix;  # $tag starts with '&' or '|'
+        &&  $prefix eq '&';
 
     croak "Missing tag?$context"    # Catch "* SELECT\n  *\n* FROM\n"
         if  $sql !~ /\S/;           #                  ^ missing tag
@@ -213,7 +213,7 @@ sub _select_line {
 }
 
 sub _select_ref {
-    my( $line, $base_indent, $data, $want, $known_tags ) = @_;
+    my( $line, $base_indent, $data, $want, $known_tags, $keep_keys ) = @_;
 
     my $ref = ref $line;
     croak "Illegal ref type '$ref'" if $ref ne 'ARRAY';
@@ -276,7 +276,7 @@ sub _bad_type {
 }
 
 sub _substitute_line {
-    my( $sql, $context, $data ) = @_;
+    my( $sql, $context, $data, $keep_keys ) = @_;
 
     # Remove dependency markers and extra whitespace:
     #   "a   !b! !c!"           => "a"
@@ -300,6 +300,11 @@ sub _substitute_line {
 
         $np->{repl};
     }ge;
+
+    if( !$keep_keys ) {
+        $_ = $data->{$_}
+            for @params;
+    }
 
     return( $sql, @params );
 }
@@ -329,12 +334,13 @@ sub build_query {
 
         # Determine if we should include this line:
         my( $line, $context, $do_subs, @params ) = _select_line(
-            $_, $indent, $data, $want, $known_tags,
+            $_, $indent, $data, $want, $known_tags, $keep_keys
         )
             or  next;
 
         if( $do_subs ) {
-            ( $line, my @subs_params ) = _substitute_line( $line, $context, $data );
+            ( $line, my @subs_params ) = _substitute_line( $line, $context, $data, $keep_keys );
+
             push (@params, @subs_params);
         }
 
@@ -351,11 +357,6 @@ sub build_query {
     }
 
     my $query = join "\n", @query;
-
-    if( ! $keep_keys ) {
-        $_ = $data->{$_}
-            for  @binds;
-    }
 
     if(  $known_tags  ) {
         my @unused = grep 1==$known_tags->{$_}, sort keys %$known_tags;

@@ -17,41 +17,46 @@ use Test::More;
 
 use_ok( 'DBIx::PreQL' );
 
-my $array_of_array = [
-  [ 'SELECT' ],
-  [ "ARRAY,\nARRAY,", qw( arrayparam ) ],
-  ['FROM table'],
-  ['WHERE'],
-  [ 'AND ARRAY AND ARRAY', qw( whereparam1 whereparam2 ) ],
-];
+for my $keep_keys ( 0, 1 ) {
 
-my $pq = join "\n",
-   'SELECT',
-   'ARRAY,',
-   'ARRAY',
-   'FROM table',
-   'WHERE',
-   '    ARRAY AND ARRAY',
-;
-my @pp = qw< arrayparam  whereparam1 whereparam2 >;
+    subtest "SQL fragment insert with keep keys" . ($keep_keys ? "ON" : "OFF"), sub {
+        my $array_of_array = [
+          [ 'SELECT' ],
+          [ "ARRAY,\nARRAY,", qw( arrayparam ) ],
+          ['FROM table'],
+          ['WHERE'],
+          [ 'AND ARRAY AND ARRAY', qw( whereparam1 whereparam2 ) ],
+        ];
 
-for my $q ( $array_of_array ) {
-    my( $query, @params ) = DBIx::PreQL->build_query(
-        query       => $q,
-        wanted      => ['A','C'],
-        data        => {
-            apple       => 1,
-            apple2      => 1,
-            banana      => 1,
-            canteloupe  => 1,
-            always_1    => 1,
-            always_2    => 1,
-        },
-        keep_keys   => 1,
-    );
+        my $pq = join "\n",
+           'SELECT',
+           'ARRAY,',
+           'ARRAY',
+           'FROM table',
+           'WHERE',
+           '    ARRAY AND ARRAY',
+        ;
+        my @pp = qw< arrayparam  whereparam1 whereparam2 >;
 
-    is( $query, $pq, 'Generated same query' );
-    is_deeply( \@params, \@pp, 'Generated same keys' );
+        for my $q ( $array_of_array ) {
+            my( $query, @params ) = DBIx::PreQL->build_query(
+                query       => $q,
+                wanted      => ['A','C'],
+                data        => {
+                    apple       => 1,
+                    apple2      => 1,
+                    banana      => 1,
+                    canteloupe  => 1,
+                    always_1    => 1,
+                    always_2    => 1,
+                },
+                keep_keys   => $keep_keys,
+            );
+
+            is( $query, $pq, 'Generated same query' );
+            is_deeply( \@params, \@pp, 'Generated same keys' );
+        }
+    };
 }
 
-done_testing();
+        done_testing();

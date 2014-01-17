@@ -273,7 +273,6 @@ for my $q ( $q_string, $q_lines, $q_chunks ) {
     my $query = <<EQ;
     &     Text with a ?placeholder?
     |     Text with an !ifgot!
-    |     Text with a ?placeholder? and an !ifgot!
     |     Text with !ifgot! and !ifgot2!
 EQ
 
@@ -284,11 +283,10 @@ EQ
 
     is(
         $q,
-        join( "\n", 'Text with a ?', 'Text with an',
-            'Text with a ? and an', 'Text with and' ),
-        'ANY tags with !! and ??',
+        join( "\n", 'Text with a ?', 'Text with an', 'Text with and' ),
+        'ANY tags with !! and not ??',
     );
-    is_deeply( \@p, [ 'ph', 'ph' ] );
+    is_deeply( \@p, ['ph'] );
 
     ( $q, @p ) = DBIx::PreQL->build_query(
         query => $query,
@@ -299,17 +297,18 @@ EQ
     is_deeply( \@p, [ 'ph' ] );
 
     my $e = undef;
-#    eval {
-#        ( $q, @p ) = DBIx::PreQL->build_query(
-#            query => $query,
-#            data  => { ifgot => 'def' },
-#        );
-#        1
-#    } or do {
-#        $e = $@;
-#    };
-#
-#    like( $e, qr/undefined named place-holder/ );
+    eval {
+        ( $q, @p ) = DBIx::PreQL->build_query(
+            query => " |     Text with a ?placeholder? and an !ifgot! \n |  stuff !ifgot!",
+            data  => { ifgot => 'def' },
+        );
+        fail( 'Named placeholder in ANY tag not fatal' );
+        1
+    } or do {
+        $e = $@;
+        like( $e, qr/named placeholder/i );
+    };
+
 
     $e = undef;
     eval {
@@ -380,7 +379,7 @@ EQ
         $e = $@;
     };
 
-    like( $e, qr/No parameters nor dependency markers/i );
+    like( $e, qr/No named placeholders or dependency markers/i );
 }
 
 {  # always tags
@@ -430,8 +429,8 @@ EQ
         $e = $@;
     };
 
-    like( $e, qr/named place-holder/,
-        'Missing named place-holder causes exception.' );
+    like( $e, qr/named placeholder/,
+        'Missing named placeholder causes exception.' );
 }
 
 {  # custom tags
@@ -493,8 +492,8 @@ EQ
         $e = $@;
     };
 
-    like( $e, qr/named place-holder/,
-        'Missing named place-holder causes exception.' );
+    like( $e, qr/named placeholder/,
+        'Missing named placeholder causes exception.' );
 
     $e = undef;
     eval {

@@ -1,5 +1,12 @@
 Revision history for perl module DBIx::PreQL
 
+v0.02.02   2014-01-16
+ [Testing]
+ - Fixed tests broken by spelling changes in 0.02.01
+ - Fixed bug in SQL fragment injection
+     SQL fragment parameters were not being included if the "keep_keys" was set
+     to false.  Parameters will now always be included.
+
 v0.02.01   2013-10-25
 
  [Documentation updates]

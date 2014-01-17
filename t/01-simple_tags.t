@@ -203,12 +203,12 @@ use_ok( 'DBIx::PreQL' );
     {   #  - include when ALL ?? and ANY !! present
 
         my( $query, @params ) = DBIx::PreQL->build_query(
-                query => _fmt( \%in, qw/ dep both / ),
+                query => _fmt( \%in, qw/ dep / ),
                 data  => { nph => 'NPH', dep => 'dep', nph2 => 'NPH2', dep2 => 'dep' },
             );
 
-        my $expect_q = _fmt( \%out, qw/ dep both / ),
-        my @expect_p = ('NPH2');
+        my $expect_q = _fmt( \%out, qw/ dep / ),
+        my @expect_p = ();
 
         is( $query, $expect_q, 'TAG | generated expected query' );
         is_deeply( \@params, \@expect_p, 'TAG | generated expected params' );
